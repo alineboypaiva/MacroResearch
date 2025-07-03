@@ -1,0 +1,639 @@
+---
+title: "Paridade do Poder de Compra entre Brasil e Argentina"
+author: "Aline Boy Paiva"
+date: "23/04/2025"
+output:
+  word_document: default
+  pdf_document: default
+  html_document: default
+---
+
+```{r câmbio nominal e ppc}
+
+library(readxl)
+library(ggplot2)
+library(scales)
+library(dplyr)
+library(tidyr)
+
+# Carregar os dados
+dados_cambio <- read_excel("nominal-ppc.xlsx", sheet = "var_nominal")
+
+# Renomear colunas para facilitar
+colnames(dados_cambio) <- c("data", "variacao", "tipo")
+
+# Converter para formato longo (se necessário)
+dados_cambio <- dados_cambio %>%
+  mutate(data = as.Date(data))
+
+# Separar os dados por tipo
+dados_nominal <- dados_cambio %>% filter(tipo == "taxa de câmbio nominal")
+dados_ppc <- dados_cambio %>% filter(tipo == "ppc relativa")
+
+# Definir limites do período
+data_inicio <- as.Date("2023-01-01")
+data_fim <- as.Date("2025-03-01")
+
+# Criar o gráfico da taxa de câmbio nominal
+ggplot() +
+  # Linha para taxa de câmbio nominal
+  geom_line(data = dados_nominal, 
+            aes(x = data, y = variacao, color = "Taxa de Câmbio Nominal"), 
+            size = 1) +
+  # Linha para PPC relativa
+  geom_line(data = dados_ppc, 
+            aes(x = data, y = variacao, color = "PPC Relativa"), 
+            size = 1) +
+  
+  # Configurações visuais
+  scale_color_manual(values = c("Taxa de Câmbio Nominal" = "#FEB712", 
+                               "PPC Relativa" = "#46B1E1")) +
+  
+  labs(title = "Gráfico 1: Variação Cambial",
+       subtitle = "Variação estimada pela PPC vs Variação observada no Câmbio Nominal",
+       x = NULL,
+       y = NULL,
+       color = NULL,
+       caption = "Fonte dos dados: Investing.com, BCRA e IBGE.") +
+  
+  scale_x_date(
+    date_labels = "%b/%Y", 
+    date_breaks = "2 months",
+    limits = c(data_inicio, data_fim)
+  ) +
+  
+  scale_y_continuous(
+    labels = label_percent(scale = 1),
+    breaks = scales::pretty_breaks(n = 10)
+  ) +
+  
+theme_minimal(base_size = 13) +  # Fonte base maior
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1, size = 12),
+    axis.text.y = element_text(size = 12),
+    plot.title = element_text(hjust = 0.5, face = "bold", size = 16),
+    plot.subtitle = element_text(hjust = 0.5, size = 14),
+    plot.caption = element_text(hjust = 0.5, size = 11),
+    legend.position = "top",
+    legend.text = element_text(size = 12),
+    legend.title = element_text(size = 13, face = "bold"),
+    panel.grid.major = element_line(color = "grey90"),
+    panel.grid.minor = element_blank()
+  )
+
+```
+
+```{r variação inflação argentina}
+
+# Pacotes necessários
+library(readxl)
+library(ggplot2)
+library(scales)
+library(dplyr)
+
+# Lê a planilha 'var_ppc' e multiplica os valores por 100
+var_ppc <- read_excel("inflacao.xlsx", sheet = "infl_argentina") %>%
+  mutate(
+    data = as.Date(data),
+    argentina = argentina * 100  # Multiplica por 100 para converter em porcentagem completa
+  )
+
+# Renomeia colunas (caso os nomes venham diferentes)
+colnames(var_ppc) <- c("data", "argentina")
+
+# Definir os limites de data
+data_inicio <- as.Date("2023-01-01")
+data_fim <- as.Date("2025-03-01")
+
+# Gera o gráfico
+ggplot(var_ppc, aes(x = data, y = argentina)) +
+  geom_line(color = "#46B1E1", size = 1) +
+  labs(title = "Gráfico 2.1: Inflação na Argentina",
+       subtitle = "Variação Mensal (em %)",
+       x = NULL,
+       y = NULL,
+       caption = "Fonte dos dados: BCRA.") +
+  
+  scale_x_date(
+    date_labels = "%b/%Y",
+    date_breaks = "2 months",
+    limits = c(data_inicio, data_fim)
+  ) +
+  scale_y_continuous(
+    labels = function(x) paste0(x, "%"),  # Adiciona o símbolo de porcentagem
+    breaks = scales::pretty_breaks(n = 10)
+  ) +
+theme_minimal(base_size = 13) +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1, size = 12),
+    axis.text.y = element_text(size = 12),
+    plot.title = element_text(hjust = 0.5, face = "bold", size = 16),
+    plot.subtitle = element_text(hjust = 0.5, size = 14),
+    plot.caption = element_text(hjust = 0.5, size = 11),
+    panel.grid.major = element_line(color = "grey90"),
+    panel.grid.minor = element_blank(),
+    plot.margin = margin(10, 10, 10, 10)
+  )
+
+
+```
+
+```{r variação inflação brasil}
+# Pacotes necessários
+library(readxl)
+library(ggplot2)
+library(scales)
+library(dplyr)
+
+# Lê a planilha 'var_ppc' e multiplica os valores por 100
+var_ppc <- read_excel("inflacao.xlsx", sheet = "infl_brasil") %>%
+  mutate(
+    data = as.Date(data),
+    brasil = brasil * 100  # Multiplica por 100 para converter em porcentagem completa
+  )
+
+# Renomeia colunas (caso os nomes venham diferentes)
+colnames(var_ppc) <- c("data", "brasil")
+
+# Definir os limites de data
+data_inicio <- as.Date("2023-01-01")
+data_fim <- as.Date("2025-03-01")
+
+# Gera o gráfico
+ggplot(var_ppc, aes(x = data, y = brasil)) +
+  geom_line(color = "#FEB712", size = 1) +
+  labs(title = "Gráfico 2.1: Inflação no Brasil",
+       subtitle = "Variação Mensal (em %)",
+       x = NULL,
+       y = NULL,
+       caption = "Fonte dos dados: BCB - Série: 10844.") +
+  
+  scale_x_date(
+    date_labels = "%b/%Y",
+    date_breaks = "2 months",
+    limits = c(data_inicio, data_fim)
+  ) +
+  scale_y_continuous(
+    labels = function(x) paste0(x, "%"),  # Adiciona o símbolo de porcentagem
+    breaks = scales::pretty_breaks(n = 8)
+  ) +
+theme_minimal(base_size = 13) +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1, size = 12),
+    axis.text.y = element_text(size = 12),
+    plot.title = element_text(hjust = 0.5, face = "bold", size = 16),
+    plot.subtitle = element_text(hjust = 0.5, size = 14),
+    plot.caption = element_text(hjust = 0.5, size = 11),
+    panel.grid.major = element_line(color = "grey90"),
+    panel.grid.minor = element_blank(),
+    plot.margin = margin(10, 10, 10, 10)
+  )
+
+
+```
+
+```{r câmbio nominal}
+
+# Carregar dados da taxa nominal
+cambio_nominal <- read_excel("cambio.xlsx", sheet = "camb_nominal") %>%
+  rename(data = 1, valor = 2) %>%
+  mutate(data = as.Date(data))
+
+# Definir limites do período
+data_inicio <- as.Date("2023-01-01")
+data_fim <- as.Date("2025-01-01")
+
+# Gráfico da taxa nominal
+ggplot(cambio_nominal, aes(x = data, y = valor)) +
+  geom_line(color = "#46B1E1", size = 1) +
+  labs(title = "Gráfico 3.1: Taxa de Câmbio Nominal",
+       subtitle = "Real e Peso Argentino",
+       x = NULL,
+       y = NULL,
+       caption = "Fonte dos dados: BCRA.") +
+  
+  scale_x_date(
+    date_labels = "%b/%Y", 
+    date_breaks = "2 months",
+    limits = c(data_inicio, data_fim)
+  ) +
+  
+  scale_y_continuous(
+    labels = function(x) paste0("$", format(x, big.mark = ".", decimal.mark = ",")),
+    breaks = scales::pretty_breaks(n = 8)
+  ) +
+  
+theme_minimal(base_size = 13) +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1, size = 12),
+    axis.text.y = element_text(size = 12),
+    plot.title = element_text(hjust = 0.5, face = "bold", size = 16),
+    plot.subtitle = element_text(hjust = 0.5, size = 14),
+    plot.caption = element_text(hjust = 0.5, size = 11),
+    panel.grid.major = element_line(color = "grey90"),
+    panel.grid.minor = element_blank(),
+    plot.margin = margin(10, 10, 10, 10)
+  )
+
+
+```
+
+```{r câmbio real}
+
+library(readxl)
+library(ggplot2)
+library(scales)
+library(dplyr)
+
+# Carregar dados da taxa real
+cambio_real <- read_excel("cambio.xlsx", sheet = "camb_real") %>%
+  rename(data = 1, valor = 2) %>%
+  mutate(data = as.Date(data))
+
+# Definir limites do período
+data_inicio <- as.Date("2023-01-01")
+data_fim <- as.Date("2025-01-01")
+
+# Gráfico da taxa real
+ggplot(cambio_real, aes(x = data, y = valor)) +
+  geom_line(color = "#FEB712", size = 1) +
+  labs(title = "Gráfico 3.2: Taxa de Câmbio Real",
+       subtitle = "Ajustada pelo IPCA",
+       x = NULL,
+       y = NULL,
+       caption = "Fonte dos dados: BCB - Série: 11756.") +
+  
+  scale_x_date(
+    date_labels = "%b/%Y", 
+    date_breaks = "2 months",
+    limits = c(data_inicio, data_fim)
+  ) +
+  
+  scale_y_continuous(
+    labels = function(x) paste0("$", format(x, big.mark = ".", decimal.mark = ",")),
+    breaks = scales::pretty_breaks(n = 8)
+  ) +
+  
+theme_minimal(base_size = 13) +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1, size = 12),
+    axis.text.y = element_text(size = 12),
+    plot.title = element_text(hjust = 0.5, face = "bold", size = 16),
+    plot.subtitle = element_text(hjust = 0.5, size = 14),
+    plot.caption = element_text(hjust = 0.5, size = 11),
+    panel.grid.major = element_line(color = "grey90"),
+    panel.grid.minor = element_blank(),
+    plot.margin = margin(10, 10, 10, 10)
+  )
+
+
+```
+
+```{r juros argentina}
+
+library(readxl)
+library(ggplot2)
+library(scales)
+library(dplyr)
+
+# Carregar dados da Argentina
+juros_arg <- read_excel("juros.xlsx", sheet = "juros_argentina") %>%
+  rename(data = 1, valor = 2) %>%
+  mutate(data = as.Date(data))
+
+# Definir limites do período
+data_inicio <- as.Date("2023-01-02")
+data_fim <- as.Date("2025-03-31")
+
+# Gráfico da Argentina
+ggplot(juros_arg, aes(x = data, y = valor)) +
+  geom_line(color = "#46B1E1", size = 1) +
+  labs(title = "Gráfico 4.1: Juros na Argentina",
+       subtitle = "Meta da Taxa de Juros Básica",
+       x = NULL,
+       y = NULL,
+       caption = "Fonte dos dados: BCRA.") +
+  
+  scale_x_date(
+    date_labels = "%b/%Y", 
+    date_breaks = "2 months",
+    limits = c(data_inicio, data_fim)
+  ) +
+  
+  scale_y_continuous(
+    breaks = scales::pretty_breaks(n = 10),
+    labels = function(x) paste0(x, "%")
+  ) +
+  
+theme_minimal(base_size = 13) +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1, size = 12),
+    axis.text.y = element_text(size = 12),
+    plot.title = element_text(hjust = 0.5, face = "bold", size = 16),
+    plot.subtitle = element_text(hjust = 0.5, size = 14),
+    plot.caption = element_text(hjust = 0.5, size = 11),
+    panel.grid.major = element_line(color = "grey90"),
+    panel.grid.minor = element_blank(),
+    plot.margin = margin(10, 10, 10, 10)
+  )
+
+
+```
+
+```{r juros brasil}
+
+# Carregar dados do Brasil
+juros_br <- read_excel("juros.xlsx", sheet = "juros_brasil") %>%
+  rename(data = 1, valor = 2) %>%
+  mutate(data = as.Date(data))
+
+# Definir limites do período (terminando em março/2025)
+data_inicio <- as.Date("2023-01-02")
+data_fim <- as.Date("2025-03-31")  # Garantindo o término em março
+
+# Gráfico do Brasil
+ggplot(juros_br, aes(x = data, y = valor)) +
+  geom_line(color = "#FEB712", size = 1) +
+  labs(
+    title = "Gráfico 4.2: Juros no Brasil",
+    subtitle = "Meta da Taxa de Juros Básica (SELIC)",
+    x = NULL,
+    y = NULL,
+    caption = "Fonte dos dados: BCB - Série: 432."
+  ) +
+  scale_x_date(
+    date_labels = "%b/%Y", 
+    date_breaks = "2 months",
+    limits = c(data_inicio, data_fim)  # Corta o gráfico em março/2025
+  ) +
+  scale_y_continuous(
+    breaks = scales::pretty_breaks(n = 8),
+    labels = function(x) paste0(x, "%")
+  ) +
+theme_minimal(base_size = 13) +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1, size = 12),
+    axis.text.y = element_text(size = 12),
+    plot.title = element_text(hjust = 0.5, face = "bold", size = 16),
+    plot.subtitle = element_text(hjust = 0.5, size = 14),
+    plot.caption = element_text(hjust = 0.5, size = 11),
+    panel.grid.major = element_line(color = "grey90"),
+    panel.grid.minor = element_blank(),
+    plot.margin = margin(10, 10, 10, 10)
+  )
+
+
+```
+
+```{r reservas internacionais argentina}
+
+library(readxl)
+library(ggplot2)
+library(scales)
+library(dplyr)
+
+# Carregar dados da Argentina
+reservas_arg <- read_excel("reservas-internacionais.xlsx", sheet = "ri_argentina") %>%
+  rename(data = 1, valor = 2) %>%
+  mutate(data = as.Date(data))
+
+# Definir limites do período
+data_inicio <- as.Date("2023-01-01")
+data_fim <- as.Date("2025-03-01")
+
+# Gráfico da Argentina
+ggplot(reservas_arg, aes(x = data, y = valor)) +
+  geom_line(color = "#46B1E1", size = 1) +
+  labs(title = "Gráfico 6.1: Reservas Internacionais da Argentina",
+       subtitle = "Em milhões de dólares",
+       x = NULL,
+       y = NULL,
+       caption = "Fonte dos dados: BCRA.") +
+  
+  scale_x_date(
+    date_labels = "%b/%Y", 
+    date_breaks = "2 months",
+    limits = c(data_inicio, data_fim)
+  ) +
+  
+  scale_y_continuous(
+    labels = function(x) paste0("US$ ", format(x, big.mark = ".", decimal.mark = ",")),
+    breaks = scales::pretty_breaks(n = 8)
+  ) +
+  
+theme_minimal(base_size = 13) +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1, size = 12),
+    axis.text.y = element_text(size = 12),
+    plot.title = element_text(hjust = 0.5, face = "bold", size = 16),
+    plot.subtitle = element_text(hjust = 0.5, size = 14),
+    plot.caption = element_text(hjust = 0.5, size = 11),
+    panel.grid.major = element_line(color = "grey90"),
+    panel.grid.minor = element_blank(),
+    plot.margin = margin(10, 10, 10, 10)
+  )
+
+
+```
+
+```{r reservas internacionais brasil}
+
+# Carregar dados do Brasil
+reservas_br <- read_excel("reservas-internacionais.xlsx", sheet = "ri_brasil") %>%
+  rename(data = 1, valor = 2) %>%
+  mutate(data = as.Date(data))
+
+# Definir limites do período
+data_inicio <- as.Date("2023-01-01")
+data_fim <- as.Date("2025-03-01")
+
+# Gráfico do Brasil
+ggplot(reservas_br, aes(x = data, y = valor)) +
+  geom_line(color = "#FEB712", size = 1) +
+  labs(title = "Gráfico 6.2: Reservas Internacionais do Brasil",
+       subtitle = "Em milhões de dólares",
+       x = NULL,
+       y = NULL,
+       caption = "Fonte dos dados: BCB - Série: 3546.") +
+  
+  scale_x_date(
+    date_labels = "%b/%Y", 
+    date_breaks = "2 months",
+    limits = c(data_inicio, data_fim)
+  ) +
+  
+  scale_y_continuous(
+    labels = function(x) paste0("US$ ", format(x, big.mark = ".", decimal.mark = ",")),
+    breaks = scales::pretty_breaks(n = 8)
+  ) +
+  
+theme_minimal(base_size = 13) +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1, size = 12),
+    axis.text.y = element_text(size = 12),
+    plot.title = element_text(hjust = 0.5, face = "bold", size = 16),
+    plot.subtitle = element_text(hjust = 0.5, size = 14),
+    plot.caption = element_text(hjust = 0.5, size = 11),
+    panel.grid.major = element_line(color = "grey90"),
+    panel.grid.minor = element_blank(),
+    plot.margin = margin(10, 10, 10, 10)
+  )
+
+
+```
+
+```{r risco-país argentina}
+
+# Código corrigido para o EMBI da Argentina
+library(readxl)
+library(ggplot2)
+library(dplyr)
+library(scales)
+
+# Carregar dados da Argentina
+embi_arg <- read_excel("risco-país.xlsx", sheet = "embi_argentina") %>%
+  rename(data = 1, valor = 2) %>%
+  mutate(
+    data = as.Date(data),
+    valor = as.numeric(valor)  # Conversão explícita para numérico
+  )
+
+# Definir datas de início e fim
+data_inicio <- as.Date("2023-01-01")
+data_fim <- as.Date("2025-03-31")
+
+# Gráfico da Argentina
+ggplot(embi_arg, aes(x = data, y = valor)) +
+  geom_line(color = "#46B1E1", size = 1) +
+  labs(title = "Gráfico 5.1: EMBI+ da Argentina",
+       subtitle = "Em pontos base",
+       x = NULL,
+       y = NULL,
+       caption = "Fonte dos dados: Banco Central da Reública Dominicana.") +
+  
+  scale_x_date(
+    date_labels = "%b/%Y", 
+    date_breaks = "2 months",
+    limits = c(data_inicio, data_fim)
+  ) +
+  
+  scale_y_continuous(
+    labels = function(x) paste0(format(x, big.mark = ".", decimal.mark = ","), " bp"),
+    breaks = scales::pretty_breaks(n = 8)
+  ) +
+  
+theme_minimal(base_size = 13) +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1, size = 12),
+    axis.text.y = element_text(size = 12),
+    plot.title = element_text(hjust = 0.5, face = "bold", size = 16),
+    plot.subtitle = element_text(hjust = 0.5, size = 14),
+    plot.caption = element_text(hjust = 0.5, size = 11),
+    panel.grid.major = element_line(color = "grey90"),
+    panel.grid.minor = element_blank(),
+    plot.margin = margin(10, 10, 10, 10)
+  )
+
+
+```
+
+```{r risco-país brasil}
+
+# Código para o EMBI do Brasil
+library(readxl)
+library(ggplot2)
+library(dplyr)
+library(scales)
+
+# Carregar dados do Brasil
+embi_br <- read_excel("risco-país.xlsx", sheet = "embi_brasil") %>%
+  rename(data = 1, valor = 2) %>%
+  mutate(data = as.Date(data))
+
+# Definir datas de início e fim
+data_inicio <- as.Date("2023-01-01")
+data_fim <- as.Date("2025-03-31")
+
+# Gráfico do Brasil
+ggplot(embi_br, aes(x = data, y = valor)) +
+  geom_line(color = "#FEB712", size = 1) +
+  labs(title = "Gráfico 5.2: EMBI+ do Brasil",
+       subtitle = "Em pontos base",
+       x = NULL,
+       y = NULL,
+       caption = "Fonte dos dados: Banco Central da República Dominicana.") +
+  
+  scale_x_date(
+    date_labels = "%b/%Y", 
+    date_breaks = "2 months",
+    limits = c(data_inicio, data_fim)
+  ) +
+  
+  scale_y_continuous(
+    labels = function(x) paste0(format(x, big.mark = ".", decimal.mark = ","), " bp"),
+    breaks = scales::pretty_breaks(n = 8)
+  ) +
+  
+theme_minimal(base_size = 13) +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1, size = 12),
+    axis.text.y = element_text(size = 12),
+    plot.title = element_text(hjust = 0.5, face = "bold", size = 16),
+    plot.subtitle = element_text(hjust = 0.5, size = 14),
+    plot.caption = element_text(hjust = 0.5, size = 11),
+    panel.grid.major = element_line(color = "grey90"),
+    panel.grid.minor = element_blank(),
+    plot.margin = margin(10, 10, 10, 10)
+  )
+
+
+```
+
+```{r comparativo RI em %PIB}
+
+library(ggplot2)
+library(tidyr)
+library(dplyr)
+
+# Dados
+dados <- data.frame(
+  Ano = c(2023, 2024),
+  Reservas_Brasil = c(16.2043, 15.1362),
+  Reservas_Argentina = c(4.7819, 4.1973)
+)
+
+# Transformação para formato longo
+dados_long <- dados %>%
+  pivot_longer(cols = -Ano, names_to = "Tipo", values_to = "Valor")
+
+# Gráfico
+ggplot(dados_long, aes(x = factor(Ano), y = Valor, fill = Tipo)) +
+  geom_bar(stat = "identity", 
+           position = position_dodge(width = 0.7),
+           width = 0.5) +  
+  geom_text(aes(label = paste0(round(Valor, 2), "%")), 
+            position = position_dodge(width = 0.7),
+            vjust = -0.8, size = 4) +  # tamanho levemente maior
+  scale_fill_manual(
+    values = c("Reservas_Brasil" = "#FEB712", "Reservas_Argentina" = "#46B1E1"),
+    labels = c("Reservas da Argentina", "Reservas do Brasil")
+  ) +
+  scale_y_continuous(expand = expansion(mult = c(0, 0.15))) +
+  labs(
+    title = "Gráfico 6.2: Reservas Internacionais Anuais (em % do PIB)",
+    x = NULL,
+    y = NULL,
+    fill = "País",
+    caption = "Fonte dos dados: BCB e BCRA"
+  ) +
+  theme_minimal(base_size = 13) +
+  theme(
+    plot.title = element_text(hjust = 0.5, face = "bold", size = 16),
+    plot.caption = element_text(hjust = 0.5, color = "#A6A6A6", size = 10),
+    legend.position = "top",
+    legend.title = element_text(size = 11),
+    legend.text = element_text(size = 10),
+    axis.text.x = element_text(size = 11),
+    axis.text.y = element_text(size = 11),
+    plot.margin = margin(10, 10, 10, 10)
+  )
